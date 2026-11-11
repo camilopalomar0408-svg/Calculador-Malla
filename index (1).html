@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Malla de puesta a tierra IEEE 80</title>
+<style>
+/* Plan: calculadora de ingeniería, tarjetas sobre fondo neutro frío, acento cobre (material de la malla).
+   Resultado arriba, detalle abajo. Cifras con tabular-nums. */
+:root{
+  --bg:#f1f4f5;--card:#ffffff;--tx:#1a2428;--mut:#56666e;--bd:#d5dde1;
+  --ac:#9a4a10;--ac-tx:#ffffff;--ok:#0b7a43;--okbg:#e2f5ea;--no:#b3261e;--nobg:#fdeceb;--wn:#8a5a00;--wnbg:#fff4d6;
+  --font:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1417;--card:#182025;--tx:#e6edf0;--mut:#93a4ac;--bd:#2b383e;
+    --ac:#e8a066;--ac-tx:#1b1208;--ok:#62d68f;--okbg:#12301f;--no:#ff8c82;--nobg:#3a1b19;--wn:#f0c36a;--wnbg:#33290f;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1417;--card:#182025;--tx:#e6edf0;--mut:#93a4ac;--bd:#2b383e;
+  --ac:#e8a066;--ac-tx:#1b1208;--ok:#62d68f;--okbg:#12301f;--no:#ff8c82;--nobg:#3a1b19;--wn:#f0c36a;--wnbg:#33290f;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 var(--font)}
+main{max-width:1000px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:1.45rem;margin:0 0 4px;text-wrap:balance}
+h2{font-size:1.05rem;margin:0 0 12px;text-wrap:balance}
+h3{font-size:.92rem;margin:18px 0 8px}
+.sub{color:var(--mut);margin:0 0 20px;max-width:70ch}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+label{display:block;font-size:.8rem;color:var(--mut);margin-bottom:3px}
+input,select{width:100%;padding:9px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit;font-variant-numeric:tabular-nums}
+input:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+details summary{cursor:pointer;color:var(--ac);margin-top:12px;font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:10px}
+.kpi{border:1px solid var(--bd);border-radius:10px;padding:10px}
+.kpi b{display:block;font-size:1.15rem;font-variant-numeric:tabular-nums}
+.kpi span{font-size:.76rem;color:var(--mut)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:560px;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--bd);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-size:.76rem;color:var(--mut);font-weight:600}
+.ok{color:var(--ok);font-weight:600}.no{color:var(--no);font-weight:600}
+tr.sel td{background:var(--okbg)}
+.banner{padding:14px;border-radius:10px;font-weight:600;margin-bottom:14px}
+.banner.ok{background:var(--okbg);color:var(--ok)}.banner.no{background:var(--nobg);color:var(--no)}
+.banner small{display:block;font-weight:400;margin-top:4px;color:inherit}
+.warn{background:var(--wnbg);color:var(--wn);padding:8px 10px;border-radius:8px;margin-top:8px;font-size:.88rem}
+.hint{background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:10px 12px;margin-top:12px;font-size:.9rem}
+.hint ul{margin:6px 0 0;padding-left:18px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+button{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid var(--ac);background:var(--ac);color:var(--ac-tx);cursor:pointer}
+button.sec{background:transparent;color:var(--ac)}
+button.mini{padding:3px 8px;font-size:.8rem}
+small{color:var(--mut)}
+.mono{font-family:var(--mono);font-size:.85rem}
+.dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:4px 18px;margin:0}
+.dl div{display:flex;justify-content:space-between;gap:12px;border-bottom:1px dashed var(--bd);padding:3px 0}
+.dl dt{color:var(--mut)}.dl dd{margin:0;font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main>
+<h1>Malla de puesta a tierra</h1>
+<p class="sub">Verificación de tensiones de toque y de paso según IEEE 80-2013 para una malla rectangular en suelo uniforme: sección del conductor, resistencia, GPR, tensión de malla y tensión de paso.</p>
+
+<section class="card">
+<h2>1. Suelo y falla</h2>
+<div class="grid">
+<div><label for="rho">Resistividad del suelo ρ (Ω·m)</label><input id="rho" type="number" value="800" step="any" min="0"></div>
+<div><label for="rhos">Resistividad capa superficial ρs (Ω·m)</label><input id="rhos" type="number" value="3000" step="any" min="0"></div>
+<div><label for="hs">Espesor capa superficial hs (m)</label><input id="hs" type="number" value="0.1" step="any" min="0"></div>
+<div><label for="If">Corriente de falla a tierra 3I₀ (kA)</label><input id="If" type="number" value="30" step="any" min="0"></div>
+<div><label for="Sf">Factor de reparto Sf</label><input id="Sf" type="number" value="1" step="any" min="0"></div>
+<div><label for="XR">Relación X/R en el punto de falla</label><input id="XR" type="number" value="10" step="any" min="0"></div>
+<div><label for="tf">Duración de la falla tf (s)</label><input id="tf" type="number" value="0.5" step="any" min="0"></div>
+<div><label for="peso">Peso de la persona</label><select id="peso"><option value="70" selected>70 kg</option><option value="50">50 kg</option></select></div>
+<div><label for="Ta">Temperatura ambiente Ta (°C)</label><input id="Ta" type="number" value="26" step="any"></div>
+</div>
+<details><summary>Ajustes avanzados</summary>
+<div class="grid" style="margin-top:10px">
+<div><label for="ts">Duración del choque ts (s), vacío = tf</label><input id="ts" type="number" value="" step="any" min="0"></div>
+<div><label for="tc">Duración para el conductor tc (s), vacío = tf</label><input id="tc" type="number" value="" step="any" min="0"></div>
+<div><label for="Df">Factor de decremento Df, vacío = calcular</label><input id="Df" type="number" value="" step="any" min="0"></div>
+</div></details>
+</section>
+
+<section class="card">
+<h2>2. Malla</h2>
+<div class="grid">
+<div><label for="Lx">Largo Lx (m)</label><input id="Lx" type="number" value="90" step="any" min="0"></div>
+<div><label for="Ly">Ancho Ly (m)</label><input id="Ly" type="number" value="70" step="any" min="0"></div>
+<div><label for="D">Espaciamiento entre conductores D (m)</label><input id="D" type="number" value="7" step="any" min="0"></div>
+<div><label for="h">Profundidad de enterramiento h (m)</label><input id="h" type="number" value="0.5" step="any" min="0"></div>
+<div><label for="preset">Conductor de cobre</label><select id="preset"></select></div>
+<div><label for="Asec">Sección (mm²)</label><input id="Asec" type="number" value="107.2" step="any" min="0"></div>
+<div><label for="dmm">Diámetro (mm)</label><input id="dmm" type="number" value="13.3" step="any" min="0"></div>
+<div><label for="mat">Material</label><select id="mat"></select></div>
+<div><label for="conn">Tipo de conexión</label><select id="conn"></select></div>
+<div><label for="nR">Número de varillas</label><input id="nR" type="number" value="20" step="1" min="0"></div>
+<div><label for="LR">Longitud de cada varilla (m)</label><input id="LR" type="number" value="3" step="any" min="0"></div>
+<div><label for="rodPos">Ubicación de varillas</label><select id="rodPos"><option value="esq" selected>En esquinas y perímetro</option><option value="no">Sin varillas o pocas, no en esquinas</option></select></div>
+</div>
+<div class="btns"><button id="save" type="button">+ Guardar caso para comparar</button><button id="reset" class="sec" type="button">Restablecer valores</button></div>
+</section>
+
+<section class="card" id="res" aria-live="polite"></section>
+<section class="card" id="cases" hidden></section>
+
+<p><small>Alcance: malla rectangular, suelo de una sola capa, Rg por Sverak (Ec. 57), Ki = 0,644 + 0,148·n, h entre 0,25 y 2,5 m. Los valores de Rg, Em y Es son una verificación de diseño y no reemplazan una simulación (por ejemplo en ETAP) ni la medición de resistividad en sitio.</small></p>
+</main>
+
+<script id="core">
+/* ===== NÚCLEO DE CÁLCULO (IEEE 80-2013) ===== */
+const MAT={
+  blando:{n:"Cobre recocido (blando) 100 %",ar:0.00393,K0:234,Tm:1083,rr:1.72,TC:3.42},
+  duro:{n:"Cobre duro comercial 97 %",ar:0.00381,K0:242,Tm:1084,rr:1.78,TC:3.42},
+  cw40:{n:"Acero recubierto de cobre 40 %",ar:0.00378,K0:245,Tm:1084,rr:4.40,TC:3.85}
+};
+const CONN={
+  exo:{n:"Soldadura exotérmica (usa Tm del material)",lim:Infinity},
+  fuerte:{n:"Soldadura fuerte (Tm ≤ 450 °C)",lim:450},
+  mec:{n:"Conectores mecánicos (Tm ≤ 250 °C)",lim:250}
+};
+const PRE=[
+  {n:"1/0 AWG",A:53.5,d:9.4},{n:"2/0 AWG",A:67.4,d:10.5},{n:"3/0 AWG",A:85.0,d:11.8},{n:"4/0 AWG",A:107.2,d:13.3},
+  {n:"250 kcmil",A:126.7,d:14.6},{n:"300 kcmil",A:152.0,d:16.0},{n:"350 kcmil",A:177.3,d:17.3},{n:"500 kcmil",A:253.0,d:20.6}
+];
+function calcular(p){
+  const o={};
+  const capa=p.hs>0&&p.rhos>0;
+  const rs=capa?p.rhos:p.rho;
+  o.capa=capa;
+  o.Cs=capa?1-0.09*(1-p.rho/p.rhos)/(2*p.hs+0.09):1;
+  const kb=p.peso===50?0.116:0.157;
+  o.Etouch=(1000+1.5*o.Cs*rs)*kb/Math.sqrt(p.ts);
+  o.Estep=(1000+6*o.Cs*rs)*kb/Math.sqrt(p.ts);
+  const Tdc=p.XR/(2*Math.PI*60);
+  o.Df=p.Df>0?p.Df:(Tdc>0?Math.sqrt(1+(Tdc/p.tf)*(1-Math.exp(-2*p.tf/Tdc))):1);
+  o.Ig=p.Sf*p.If*1000;
+  o.IG=o.Df*o.Ig;
+  const m=MAT[p.mat];
+  o.Tm=Math.min(m.Tm,CONN[p.conn].lim);
+  o.Amin=p.If/Math.sqrt((m.TC*1e-4/(p.tc*m.ar*m.rr))*Math.log((m.K0+o.Tm)/(m.K0+p.Ta)));
+  o.okCond=p.Asec>=o.Amin;
+  const A=p.Lx*p.Ly;
+  o.A=A;
+  o.nY=Math.max(1,Math.round(p.Lx/p.D))+1;
+  o.nX=Math.max(1,Math.round(p.Ly/p.D))+1;
+  o.LC=o.nY*p.Ly+o.nX*p.Lx;
+  o.Lp=2*(p.Lx+p.Ly);
+  o.Deff=(p.Lx/(o.nY-1)+p.Ly/(o.nX-1))/2;
+  const D=o.Deff,d=p.dmm/1000,h=p.h;
+  o.LRt=p.nR*p.LR;
+  o.LT=o.LC+o.LRt;
+  o.Rg=p.rho*(1/o.LT+(1/Math.sqrt(20*A))*(1+1/(1+h*Math.sqrt(20/A))));
+  o.GPR=o.IG*o.Rg;
+  o.na=2*o.LC/o.Lp;
+  o.nb=Math.sqrt(o.Lp/(4*Math.sqrt(A)));
+  o.n=o.na*o.nb;
+  const esq=p.rodPos==="esq"&&p.nR>0;
+  o.Kii=esq?1:1/Math.pow(2*o.n,2/o.n);
+  o.Kh=Math.sqrt(1+h/1);
+  o.Km=(1/(2*Math.PI))*(Math.log(D*D/(16*h*d)+Math.pow(D+2*h,2)/(8*D*d)-h/(4*d))+(o.Kii/o.Kh)*Math.log(8/(Math.PI*(2*o.n-1))));
+  o.Ki=0.644+0.148*o.n;
+  o.LM=esq?o.LC+(1.55+1.22*(p.LR/Math.sqrt(p.Lx*p.Lx+p.Ly*p.Ly)))*o.LRt:o.LC+o.LRt;
+  o.Em=p.rho*o.Km*o.Ki*o.IG/o.LM;
+  o.Ks=(1/Math.PI)*(1/(2*h)+1/(D+h)+(1/D)*(1-Math.pow(0.5,o.n-2)));
+  o.LS=0.75*o.LC+0.85*o.LRt;
+  o.Es=p.rho*o.Ks*o.Ki*o.IG/o.LS;
+  o.safeGPR=o.GPR<=o.Etouch;
+  o.okEm=o.Em<=o.Etouch;
+  o.okEs=o.Es<=o.Estep;
+  o.okMalla=o.safeGPR||(o.okEm&&o.okEs);
+  o.ok=o.okCond&&o.okMalla;
+  o.LMreq=p.rho*o.Km*o.Ki*o.IG/o.Etouch;
+  o.LSreq=p.rho*o.Ks*o.Ki*o.IG/o.Estep;
+  return o;
+}
+/* ===== FIN NÚCLEO ===== */
+</script>
+
+<script>
+const $=id=>document.getElementById(id);
+const nf=(d)=>new Intl.NumberFormat("es-CO",{minimumFractionDigits:d,maximumFractionDigits:d});
+const F={};const f=(x,d=2)=>{if(!Number.isFinite(x))return "–";(F[d]=F[d]||nf(d));return F[d].format(x)};
+const IDS=["rho","rhos","hs","If","Sf","XR","tf","peso","Ta","ts","tc","Df","Lx","Ly","D","h","preset","Asec","dmm","mat","conn","nR","LR","rodPos"];
+let last=null,cases=[],cid=0;
+
+PRE.forEach((c,i)=>{const o=document.createElement("option");o.value=i;o.textContent=c.n+" · "+f(c.A,1)+" mm²";if(i===3)o.selected=true;$("preset").appendChild(o)});
+const oc=document.createElement("option");oc.value="x";oc.textContent="Personalizado";$("preset").appendChild(oc);
+Object.keys(MAT).forEach(k=>{const o=document.createElement("option");o.value=k;o.textContent=MAT[k].n;$("mat").appendChild(o)});
+Object.keys(CONN).forEach(k=>{const o=document.createElement("option");o.value=k;o.textContent=CONN[k].n;$("conn").appendChild(o)});
+
+const DEF={};IDS.forEach(i=>DEF[i]=$(i).value);
+
+function leer(){
+  const v=id=>parseFloat($(id).value);
+  const p={rho:v("rho"),rhos:v("rhos"),hs:v("hs"),If:v("If"),Sf:v("Sf"),XR:v("XR"),tf:v("tf"),peso:parseInt($("peso").value,10),Ta:v("Ta"),
+    Lx:v("Lx"),Ly:v("Ly"),D:v("D"),h:v("h"),Asec:v("Asec"),dmm:v("dmm"),mat:$("mat").value,conn:$("conn").value,nR:v("nR"),LR:v("LR"),rodPos:$("rodPos").value};
+  const ts=v("ts"),tc=v("tc"),Df=v("Df");
+  p.ts=ts>0?ts:p.tf;p.tc=tc>0?tc:p.tf;p.Df=Df>0?Df:0;
+  return p;
+}
+function valido(p){
+  const pos=["rho","tf","If","Lx","Ly","D","h","Asec","dmm","ts","tc"];
+  if(pos.some(k=>!(p[k]>0)))return false;
+  if(!Number.isFinite(p.Sf)||p.Sf<0||!Number.isFinite(p.XR)||p.XR<0||!Number.isFinite(p.Ta))return false;
+  if(!Number.isFinite(p.nR)||p.nR<0||(p.nR>0&&!(p.LR>0)))return false;
+  if(!Number.isFinite(p.hs)||p.hs<0||!Number.isFinite(p.rhos)||p.rhos<0)return false;
+  return true;
+}
+const ST=(b,t)=>`<span class="${b?"ok":"no"}">${t}</span>`;
+
+function barrido(p){
+  const vals=[10,8,7,6,5,4,3,2.5,2];
+  return vals.map(D=>{const q=Object.assign({},p,{D});const o=calcular(q);return {D,o}});
+}
+
+function calc(){
+  const p=leer();
+  if(!valido(p)){last=null;$("res").innerHTML="<small>Completa los campos con valores válidos (mayores que cero) para ver el resultado.</small>";return}
+  const o=calcular(p);last={o,p};
+  const w=[];
+  if(p.h<0.25||p.h>2.5)w.push("La profundidad h está fuera del rango 0,25 a 2,5 m donde son válidas las ecuaciones de Ks.");
+  if(o.capa&&p.rhos<p.rho)w.push("La capa superficial es menos resistiva que el suelo: Cs resulta mayor que 1 y la fórmula pierde validez. Revisa ρs.");
+  if(Math.abs(o.Deff-p.D)>0.05*p.D)w.push("Lx/D y Ly/D no son enteros: se usa un espaciamiento efectivo de "+f(o.Deff,2)+" m ("+o.nY+" conductores en un sentido y "+o.nX+" en el otro).");
+  if(p.Sf>1)w.push("Sf mayor que 1 no tiene sentido físico; revisa el factor de reparto.");
+  if(o.n>25||o.Deff<2.5)w.push("La malla queda fuera del rango donde las ecuaciones empíricas de Km, Ks y Ki son confiables (D ≥ 2,5 m y n ≤ 25). Con mallas muy densas Es puede aparecer creciendo; confirma con una simulación.");
+  if(p.nR>0&&p.LR<=0)w.push("Define la longitud de las varillas.");
+  let b;
+  if(o.ok&&o.safeGPR)b=`<div class="banner ok">✔ La malla cumple: el GPR (${f(o.GPR,0)} V) es menor que la tensión de toque tolerable (${f(o.Etouch,0)} V).<small>Con GPR bajo el límite no hay riesgo en la malla; revisa igualmente las tensiones transferidas a cercas, tuberías y cables.</small></div>`;
+  else if(o.ok)b=`<div class="banner ok">✔ La malla cumple: Em ≤ tensión de toque y Es ≤ tensión de paso tolerables.<small>El GPR (${f(o.GPR,0)} V) supera la tensión de toque, por eso se verificaron Em y Es.</small></div>`;
+  else{
+    const causas=[];
+    if(!o.okCond)causas.push("la sección del conductor no alcanza ("+f(o.Amin,1)+" mm² mínimo)");
+    if(!o.okMalla){if(!o.okEm)causas.push("Em supera la tensión de toque");if(!o.okEs)causas.push("Es supera la tensión de paso")}
+    b=`<div class="banner no">✘ La malla no cumple: ${causas.join("; ")}.</div>`;
+  }
+  let h=b;
+  h+=`<h2>3. Resultados</h2><div class="kpis">
+  <div class="kpi"><b>${f(o.Rg,2)} Ω</b><span>Resistencia de la malla Rg</span></div>
+  <div class="kpi"><b>${f(o.IG/1000,2)} kA</b><span>Corriente de malla IG = Df·Sf·3I₀</span></div>
+  <div class="kpi"><b>${f(o.GPR,0)} V</b><span>Elevación de potencial GPR</span></div>
+  <div class="kpi"><b>${f(o.Etouch,0)} V</b><span>Toque tolerable</span></div>
+  <div class="kpi"><b>${f(o.Estep,0)} V</b><span>Paso tolerable</span></div>
+  <div class="kpi"><b>${f(o.Em,0)} V</b><span>Tensión de malla Em</span></div>
+  <div class="kpi"><b>${f(o.Es,0)} V</b><span>Tensión de paso Es</span></div>
+  <div class="kpi"><b>${f(o.LT,0)} m</b><span>Conductor + varillas LT</span></div>
+  </div>`;
+  w.forEach(t=>h+=`<div class="warn">⚠ ${t}</div>`);
+  h+=`<h3>Verificación</h3><div class="scroll"><table><thead><tr><th>Criterio</th><th>Calculado</th><th>Límite</th><th>Estado</th></tr></thead><tbody>
+  <tr><td>Sección del conductor (mm²)</td><td>${f(p.Asec,1)}</td><td>≥ ${f(o.Amin,1)}</td><td>${ST(o.okCond,o.okCond?"Cumple":"No cumple")}</td></tr>
+  <tr><td>GPR frente a toque tolerable (V)</td><td>${f(o.GPR,0)}</td><td>≤ ${f(o.Etouch,0)}</td><td>${o.safeGPR?'<span class="ok">Cumple</span>':'<span class="no">Supera, verificar Em y Es</span>'}</td></tr>
+  <tr><td>Tensión de malla Em (V)</td><td>${f(o.Em,0)}</td><td>≤ ${f(o.Etouch,0)}</td><td>${ST(o.okEm,o.okEm?"Cumple":"No cumple")}</td></tr>
+  <tr><td>Tensión de paso Es (V)</td><td>${f(o.Es,0)}</td><td>≤ ${f(o.Estep,0)}</td><td>${ST(o.okEs,o.okEs?"Cumple":"No cumple")}</td></tr>
+  </tbody></table></div>`;
+  if(!o.okMalla){
+    const needM=Math.max(0,o.LMreq-o.LM),needS=Math.max(0,o.LSreq-o.LS);
+    const ratio=o.GPR/o.Etouch;
+    h+=`<div class="hint"><b>Qué cambiar</b><ul>`;
+    h+=`<li>Con el Km y Ki actuales, Em necesita una longitud efectiva LM de unos ${f(o.LMreq,0)} m y hay ${f(o.LM,0)} m${needM>0?" (faltan "+f(needM,0)+" m)":""}.</li>`;
+    h+=`<li>Una forma más eficaz que añadir cobre es bajar la corriente que entra al suelo: IG = ${f(o.IG/1000,1)} kA hoy. El GPR sería ${f(ratio,1)} veces el toque tolerable. Revisa Sf (cables de guarda, neutros y retorno metálico) y usa la 3I₀ de falla monofásica a tierra del estudio de cortocircuito.</li>`;
+    h+=`<li>Una capa superficial más resistiva y gruesa (ρs, hs) sube las tensiones tolerables; menos tiempo de despeje tf también.</li>`;
+    h+=`<li>Con ρ = ${f(p.rho,0)} Ω·m, menor espaciamiento D y varillas más largas (o rellenos de baja resistividad) reducen Rg y Em. Mira el barrido de espaciamiento abajo.</li>`;
+    h+=`</ul></div>`;
+  }
+  const bar=barrido(p);
+  const fuera=r=>r.n>25||r.Deff<2.5;
+  const primero=bar.find(x=>x.o.ok&&!fuera(x.o));
+  h+=`<h3>Barrido de espaciamiento D (resto de datos iguales)</h3><div class="scroll"><table><thead><tr><th>D (m)</th><th>LC (m)</th><th>Rg (Ω)</th><th>GPR (V)</th><th>Em (V)</th><th>Es (V)</th><th>Estado</th></tr></thead><tbody>`;
+  bar.forEach(({D,o:r})=>{
+    h+=`<tr class="${primero&&r===primero.o?"sel":""}"><td>${f(D,1)}</td><td>${f(r.LC,0)}</td><td>${f(r.Rg,2)}</td><td>${f(r.GPR,0)}</td><td>${f(r.Em,0)}</td><td>${f(r.Es,0)}</td><td>${fuera(r)?'<span class="no">Fuera de rango</span>':r.ok?(r===(primero&&primero.o)?'<span class="ok">Primero que cumple</span>':'<span class="ok">Cumple</span>'):'<span class="no">No cumple</span>'}</td></tr>`;
+  });
+  h+=`</tbody></table></div><p><small>${primero?"El primer espaciamiento que cumple es D = "+f(primero.D,1)+" m.":"Ningún espaciamiento válido de la lista cumple con estos datos; el límite está en la corriente IG, el suelo o la capa superficial, no en la densidad de la malla."}</small></p>`;
+  h+=`<details><summary>Cálculo paso a paso</summary><dl class="dl" style="margin-top:10px">
+  <div><dt>Cs (capa superficial)</dt><dd>${f(o.Cs,3)}</dd></div>
+  <div><dt>Df (decremento)</dt><dd>${f(o.Df,3)}</dd></div>
+  <div><dt>Tm usada (°C)</dt><dd>${f(o.Tm,0)}</dd></div>
+  <div><dt>Área de la malla A (m²)</dt><dd>${f(o.A,0)}</dd></div>
+  <div><dt>Conductores en cada sentido</dt><dd>${o.nY} × ${o.nX}</dd></div>
+  <div><dt>Espaciamiento efectivo (m)</dt><dd>${f(o.Deff,2)}</dd></div>
+  <div><dt>Conductor de malla LC (m)</dt><dd>${f(o.LC,0)}</dd></div>
+  <div><dt>Varillas LR total (m)</dt><dd>${f(o.LRt,0)}</dd></div>
+  <div><dt>Perímetro Lp (m)</dt><dd>${f(o.Lp,0)}</dd></div>
+  <div><dt>n = na·nb</dt><dd>${f(o.n,2)}</dd></div>
+  <div><dt>Kii / Kh</dt><dd>${f(o.Kii,3)} / ${f(o.Kh,3)}</dd></div>
+  <div><dt>Km</dt><dd>${f(o.Km,3)}</dd></div>
+  <div><dt>Ks</dt><dd>${f(o.Ks,3)}</dd></div>
+  <div><dt>Ki</dt><dd>${f(o.Ki,3)}</dd></div>
+  <div><dt>LM (m)</dt><dd>${f(o.LM,0)}</dd></div>
+  <div><dt>LS (m)</dt><dd>${f(o.LS,0)}</dd></div>
+  </dl><p><small>Ec. usadas: Cs = 1 − 0,09(1 − ρ/ρs)/(2hs + 0,09); Etoque = (1000 + 1,5·Cs·ρs)·k/√ts; Epaso = (1000 + 6·Cs·ρs)·k/√ts, con k = 0,116 (50 kg) o 0,157 (70 kg); Df = √(1 + (Ta/tf)(1 − e^(−2tf/Ta))), Ta = X/(ωR); sección mínima A = I / √[(TCAP·10⁻⁴/(tc·αr·ρr))·ln((K0+Tm)/(K0+Ta))]; Rg = ρ[1/LT + 1/√(20A)·(1 + 1/(1 + h√(20/A)))]; Em = ρ·Km·Ki·IG/LM; Es = ρ·Ks·Ki·IG/LS; LM = LC + [1,55 + 1,22·Lr/√(Lx²+Ly²)]·LR con varillas en esquinas, LM = LC + LR en otro caso; LS = 0,75·LC + 0,85·LR.</small></p></details>`;
+  $("res").innerHTML=h;
+}
+
+document.querySelectorAll("input,select").forEach(e=>e.addEventListener("input",calc));
+$("preset").addEventListener("change",()=>{const v=$("preset").value;if(v!=="x"){const c=PRE[+v];$("Asec").value=c.A;$("dmm").value=c.d}calc()});
+["Asec","dmm"].forEach(i=>$(i).addEventListener("input",()=>{$("preset").value="x"}));
+$("reset").onclick=()=>{IDS.forEach(i=>$(i).value=DEF[i]);calc()};
+$("save").onclick=()=>{if(!last)return;cases.push({id:++cid,vals:Object.fromEntries(IDS.map(i=>[i,$(i).value])),o:last.o});renderCases()};
+function renderCases(){
+  const el=$("cases");el.hidden=!cases.length;if(!cases.length)return;
+  let h=`<h2>Casos guardados</h2><div class="scroll"><table><thead><tr><th>Caso</th><th>ρ</th><th>3I₀ (kA)</th><th>Sf</th><th>Lx×Ly (m)</th><th>D (m)</th><th>Varillas</th><th>Rg (Ω)</th><th>GPR (V)</th><th>Em (V)</th><th>Es (V)</th><th>Estado</th><th></th></tr></thead><tbody>`;
+  cases.forEach(c=>{const x=c.vals,o=c.o;h+=`<tr><td>#${c.id}</td><td>${x.rho}</td><td>${x.If}</td><td>${x.Sf}</td><td>${x.Lx}×${x.Ly}</td><td>${x.D}</td><td>${x.nR}×${x.LR} m</td><td>${f(o.Rg,2)}</td><td>${f(o.GPR,0)}</td><td>${f(o.Em,0)}</td><td>${f(o.Es,0)}</td><td>${ST(o.ok,o.ok?"Cumple":"No cumple")}</td><td><button class="mini sec" data-load="${c.id}" type="button">Cargar</button> <button class="mini sec" data-del="${c.id}" type="button">✕</button></td></tr>`});
+  h+=`</tbody></table></div><div class="btns"><button class="sec" id="clr" type="button">Borrar todos</button></div>`;
+  el.innerHTML=h;
+}
+$("cases").addEventListener("click",e=>{
+  const t=e.target;
+  if(t.dataset.load){const c=cases.find(k=>k.id==t.dataset.load);IDS.forEach(i=>$(i).value=c.vals[i]);calc();window.scrollTo({top:0,behavior:"smooth"})}
+  else if(t.dataset.del){cases=cases.filter(k=>k.id!=t.dataset.del);renderCases()}
+  else if(t.id==="clr"){cases=[];renderCases()}
+});
+calc();
+</script>
+</body>
+</html>
